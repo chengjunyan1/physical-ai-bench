@@ -68,6 +68,12 @@ def i2v_background(dream_model, video_pair_list, device):
 
 def compute_i2v_background(json_dir, device, submodules_list, **kwargs):
 
+    # Only rank 0 triggers the download; others wait to avoid extractall race condition
+    import torch.distributed as dist
+    if get_rank() == 0:
+        dreamsim(pretrained=True)
+    if dist.is_initialized():
+        dist.barrier()
     dream_model, preprocess = dreamsim(pretrained=True)
     resolution = submodules_list['resolution']
     print0("Initialize DreamSim success")
